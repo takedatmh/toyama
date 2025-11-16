@@ -7,8 +7,11 @@
 4. [Cline Memory Bank（メモリーバンク）](#cline-memory-bankメモリーバンク)
 5. [Plan & Actモード](#plan--actモード)
 6. [MCP統合](#mcp統合)
-7. [便利な機能とTips](#便利な機能とtips)
-8. [参考URL](#参考url)
+7. [サブエージェントの使い方](#サブエージェントの使い方)
+8. [コマンドラインからの使い方](#コマンドラインからの使い方)
+9. [設定項目の詳細](#設定項目の詳細)
+10. [便利な機能とTips](#便利な機能とtips)
+11. [参考URL](#参考url)
 
 ---
 
@@ -729,9 +732,1008 @@ ClineにはプリインストールされたMCPサーバーはありません。
 
 ---
 
-## 便利な機能とTips
+## サブエージェントの使い方
 
-### 1. 自動承認モード
+### サブエージェントとは
+
+サブエージェント（Subagent）は、メインのClineタスクから特定のサブタスクを分離して実行する機能です。複雑なタスクを並行して処理したり、異なるコンテキストで作業を行う際に便利です。
+
+### 主な利点
+
+1. **タスクの分離**: メインタスクとは別のコンテキストで作業可能
+2. **並行処理**: 複数のサブタスクを同時に進行
+3. **コンテキストの独立性**: 各サブエージェントが独自のコンテキストを保持
+4. **複雑なワークフローの管理**: 大規模なプロジェクトを効率的に分割
+
+### サブエージェントの作成方法
+
+#### 方法1: 新規タスクツールから作成
+
+メインタスクの実行中に、Clineが`new_task`ツールを使用してサブエージェントを作成できます。
+
+**使用例:**
+```
+現在のコンテキストをまとめて、新しいタスクとして
+API統合部分の実装を別のサブエージェントで行う
+```
+
+#### 方法2: スラッシュコマンドから作成
+
+チャットで `/newtask` コマンドを使用して手動でサブタスクを作成できます。
+
+**手順:**
+1. チャットで `/newtask` と入力
+2. サブタスクの説明を入力
+3. 必要なコンテキストを提供
+4. 新しいタブでサブエージェントが起動
+
+### サブエージェントの管理
+
+#### タスクの切り替え
+
+VS Codeのタブ機能を使用して、複数のClineタスク間を自由に切り替えられます。
+
+- **アクティブなタスクを確認**: VS Codeのタブバーで現在のタスクを確認
+- **タスクの切り替え**: タブをクリックして異なるタスクに移動
+- **タスクを閉じる**: タブの×ボタンでタスクを終了
+
+#### コンテキストの共有
+
+サブエージェント間でコンテキストを共有する方法:
+
+1. **Memory Bankを使用**: 共通のMemory Bankファイルを参照
+2. **@メンション**: 他のタスクで作成されたファイルを参照
+3. **明示的な引き継ぎ**: new_taskツールでコンテキストを明示的に渡す
+
+### 実践的なユースケース
+
+#### ケース1: フロントエンドとバックエンドの並行開発
+
+**メインタスク**: プロジェクト全体の管理
+**サブエージェント1**: Reactフロントエンドの実装
+**サブエージェント2**: Node.js APIの実装
+
+```
+メインタスク: プロジェクト構造の設計と調整
+↓
+サブエージェント1: /newtask でフロントエンド実装を開始
+サブエージェント2: /newtask でバックエンド実装を開始
+```
+
+#### ケース2: リファクタリングと新機能開発
+
+**メインタスク**: 新機能の実装
+**サブエージェント**: 既存コードのリファクタリング
+
+```
+メインタスク: 新しい決済機能を実装中
+↓
+サブエージェント: 古い認証システムをリファクタリング
+（メインタスクに影響を与えずに並行作業）
+```
+
+#### ケース3: 調査と実装の分離
+
+**メインタスク**: 実装作業
+**サブエージェント**: 技術調査やドキュメント作成
+
+```
+メインタスク: Planモードで設計検討
+↓
+サブエージェント: 外部APIの仕様調査とドキュメント作成
+```
+
+### サブエージェントのベストプラクティス
+
+#### 1. 明確な責任範囲
+
+各サブエージェントに明確な責任範囲を与える:
+- 単一の機能やモジュールに集中
+- 相互依存を最小限に抑える
+- 完了条件を明確にする
+
+#### 2. 適切なコンテキスト提供
+
+サブエージェント作成時に必要な情報を提供:
+```markdown
+# サブタスク: ユーザー認証API実装
+
+## コンテキスト
+- メインプロジェクト: ECサイト
+- 技術スタック: Node.js + Express + PostgreSQL
+- 認証方式: JWT
+- 関連ファイル: /src/middleware/auth.js
+
+## タスク
+1. ログインエンドポイント実装
+2. トークン検証ミドルウェア作成
+3. パスワードハッシュ化処理
+4. セキュリティテスト
+```
+
+#### 3. 定期的な統合
+
+サブエージェントの作業を定期的にメインタスクに統合:
+- 小さな単位で頻繁にマージ
+- コンフリクトの早期発見
+- 全体の整合性を維持
+
+#### 4. コミュニケーション
+
+サブエージェント間の調整方法:
+- Memory Bankで情報共有
+- コミットメッセージで進捗を記録
+- 重要な決定をドキュメント化
+
+### 注意事項
+
+#### リソース管理
+
+- 同時に多数のサブエージェントを起動するとシステムリソースを消費
+- 必要なタスクのみをアクティブに保つ
+- 完了したタスクは適切にクローズ
+
+#### コンテキストの重複
+
+- 各サブエージェントは独立したコンテキストを持つ
+- 同じファイルを複数のサブエージェントで編集する場合は注意
+- Gitのブランチ機能と組み合わせて使用することを推奨
+
+#### APIコストの考慮
+
+- 各サブエージェントがAPIリクエストを消費
+- 並行実行時のコスト増加に注意
+- 必要に応じてサブエージェント数を制限
+
+---
+
+## コマンドラインからの使い方
+
+### CLI（コマンドラインインターフェース）の概要
+
+Clineは主にVS Code拡張機能として動作しますが、コマンドラインからも一部の操作が可能です。自動化スクリプトやCI/CD環境での使用に適しています。
+
+### VS Code CLIを使用したClineの起動
+
+#### 基本的なコマンド
+
+**VS Codeを起動してClineを開く:**
+```bash
+# VS Codeを起動
+code
+
+# 特定のプロジェクトでVS Codeを起動
+code /path/to/project
+
+# Clineウィンドウを開く（VS Code起動後）
+code --command "cline.plusButtonTapped"
+```
+
+#### ワークスペースを指定して起動
+
+```bash
+# ワークスペースファイルを開く
+code /path/to/workspace.code-workspace
+
+# 複数のフォルダを開く
+code /path/to/project1 --add /path/to/project2
+```
+
+### 環境変数の設定
+
+Clineの動作をコマンドラインから環境変数で制御できます。
+
+#### API キーの設定
+
+```bash
+# Claude APIキーを設定
+export ANTHROPIC_API_KEY="your-api-key-here"
+
+# OpenAI APIキーを設定
+export OPENAI_API_KEY="your-api-key-here"
+
+# Gemini APIキーを設定
+export GOOGLE_API_KEY="your-api-key-here"
+
+# VS Codeを起動
+code
+```
+
+#### プロキシ設定
+
+```bash
+# HTTPプロキシを設定
+export HTTP_PROXY="http://proxy.example.com:8080"
+export HTTPS_PROXY="http://proxy.example.com:8080"
+
+# 認証付きプロキシ
+export HTTP_PROXY="http://username:password@proxy.example.com:8080"
+```
+
+### スクリプトによる自動化
+
+#### Bashスクリプトの例
+
+```bash
+#!/bin/bash
+# cline-start.sh - Clineプロジェクトを開始するスクリプト
+
+PROJECT_PATH="/path/to/your/project"
+WORKSPACE_FILE="$PROJECT_PATH/project.code-workspace"
+
+# APIキーを設定（環境変数ファイルから読み込み）
+source ~/.cline/config
+
+# VS Codeでプロジェクトを開く
+if [ -f "$WORKSPACE_FILE" ]; then
+    echo "Opening workspace: $WORKSPACE_FILE"
+    code "$WORKSPACE_FILE"
+else
+    echo "Opening folder: $PROJECT_PATH"
+    code "$PROJECT_PATH"
+fi
+
+# Clineを自動起動（オプション）
+sleep 2
+code --command "cline.plusButtonTapped"
+
+echo "Cline started successfully!"
+```
+
+#### 実行方法
+
+```bash
+# スクリプトに実行権限を付与
+chmod +x cline-start.sh
+
+# スクリプトを実行
+./cline-start.sh
+```
+
+### CI/CD統合
+
+#### GitHub Actionsでの使用例
+
+```yaml
+name: Cline Code Review
+on: [pull_request]
+
+jobs:
+  code-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup VS Code CLI
+        run: |
+          wget -O vscode.deb 'https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64'
+          sudo apt install ./vscode.deb
+      
+      - name: Install Cline Extension
+        run: |
+          code --install-extension saoudrizwan.claude-dev
+      
+      - name: Run Cline Analysis
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # カスタムスクリプトでClineを実行
+          ./scripts/cline-review.sh
+```
+
+### コマンドライン操作の制限事項
+
+#### 現在サポートされていない機能
+
+1. **完全な非対話モード**: Clineは対話型ツールとして設計されており、完全な自動化には限界がある
+2. **CLIでの直接タスク実行**: タスクはVS Code UI経由で実行する必要がある
+3. **バッチ処理**: 複数のタスクを一度に自動実行する機能は限定的
+
+#### 代替アプローチ
+
+**APIを直接使用:**
+Clineの代わりにAnthropic/OpenAI APIを直接使用することで、完全な自動化が可能:
+
+```python
+# Python例: Anthropic APIを直接使用
+import anthropic
+
+client = anthropic.Anthropic(api_key="your-api-key")
+
+message = client.messages.create(
+    model="claude-3-5-sonnet-20241022",
+    max_tokens=4096,
+    messages=[{
+        "role": "user",
+        "content": "レビューしてください: " + code_content
+    }]
+)
+
+print(message.content)
+```
+
+### VS Code拡張機能コマンド
+
+VS Code内から使用できるCline固有のコマンド:
+
+```bash
+# Clineのメインパネルを開く
+code --command "cline.plusButtonTapped"
+
+# 新しいタスクを開始
+code --command "cline.newTask"
+
+# Memory Bankを開く
+code --command "cline.openMemoryBank"
+
+# 設定を開く
+code --command "cline.openSettings"
+```
+
+### デバッグとログ
+
+#### ログファイルの場所
+
+**macOS/Linux:**
+```bash
+# Clineのログを確認
+tail -f ~/.vscode/extensions/saoudrizwan.claude-dev-*/logs/cline.log
+
+# VS Codeの開発者ツールでログを確認
+code --command "workbench.action.toggleDevTools"
+```
+
+**Windows:**
+```powershell
+# ログファイルの場所
+%USERPROFILE%\.vscode\extensions\saoudrizwan.claude-dev-*\logs\cline.log
+```
+
+#### トラブルシューティング
+
+```bash
+# VS Codeを完全にリセット
+code --disable-extensions
+code --sync off
+
+# Cline拡張機能のみを無効化
+code --disable-extension saoudrizwan.claude-dev
+
+# 拡張機能を再インストール
+code --uninstall-extension saoudrizwan.claude-dev
+code --install-extension saoudrizwan.claude-dev
+```
+
+---
+
+## 設定項目の詳細
+
+### 設定へのアクセス方法
+
+#### VS Code UIから
+
+1. Clineのサイドバーアイコンをクリック
+2. 歯車アイコン（設定）をクリック
+3. または、`Cmd/Ctrl + Shift + P` → "Cline: Open Settings"
+
+#### settings.jsonから直接編集
+
+```bash
+# VS Code設定ファイルを開く
+code ~/.vscode/settings.json  # macOS/Linux
+code %APPDATA%\Code\User\settings.json  # Windows
+```
+
+### 主要な設定項目
+
+#### 1. APIプロバイダーとモデル選択
+
+**設定項目: `cline.apiProvider`**
+
+使用するAIプロバイダーを選択します。
+
+```json
+{
+  "cline.apiProvider": "anthropic"
+}
+```
+
+**利用可能な値:**
+- `"anthropic"` - Claude (推奨)
+- `"openai"` - GPT-4、GPT-4o等
+- `"google"` - Gemini
+- `"openrouter"` - 複数モデルへのアクセス
+- `"bedrock"` - AWS Bedrock
+- `"vertex"` - Google Cloud Vertex AI
+- `"ollama"` - ローカルLLMモデル
+- `"lmstudio"` - LM Studio
+- `"openai-native"` - OpenAI互換API
+
+**設定例:**
+```json
+{
+  "cline.apiProvider": "anthropic",
+  "cline.apiModelId": "claude-3-5-sonnet-20241022",
+  "cline.apiKey": "your-api-key-here"
+}
+```
+
+#### 2. モデル固有の設定
+
+**Claude (Anthropic) の設定:**
+
+```json
+{
+  "cline.apiProvider": "anthropic",
+  "cline.apiModelId": "claude-3-5-sonnet-20241022",
+  "cline.apiKey": "${env:ANTHROPIC_API_KEY}",
+  "cline.maxTokens": 8096,
+  "cline.temperature": 0.0
+}
+```
+
+**利用可能なClaudeモデル:**
+- `"claude-3-5-sonnet-20241022"` - 最新版（推奨）
+- `"claude-3-5-sonnet-20240620"` - 旧版
+- `"claude-3-opus-20240229"` - 最高性能モデル
+- `"claude-3-haiku-20240307"` - 高速・低コストモデル
+
+**OpenAI (GPT) の設定:**
+
+```json
+{
+  "cline.apiProvider": "openai",
+  "cline.apiModelId": "gpt-4o",
+  "cline.apiKey": "${env:OPENAI_API_KEY}",
+  "cline.maxTokens": 16384,
+  "cline.temperature": 0.0
+}
+```
+
+**利用可能なOpenAIモデル:**
+- `"gpt-4o"` - 最新のマルチモーダルモデル
+- `"gpt-4o-mini"` - 軽量版
+- `"gpt-4-turbo"` - GPT-4 Turbo
+- `"gpt-4"` - 標準GPT-4
+- `"o1-preview"` - 推論特化モデル
+- `"o1-mini"` - 軽量推論モデル
+
+**Gemini (Google) の設定:**
+
+```json
+{
+  "cline.apiProvider": "google",
+  "cline.apiModelId": "gemini-2.0-flash-exp",
+  "cline.apiKey": "${env:GOOGLE_API_KEY}",
+  "cline.maxTokens": 8192
+}
+```
+
+**利用可能なGeminiモデル:**
+- `"gemini-2.0-flash-exp"` - 最新実験版
+- `"gemini-1.5-pro"` - Pro版
+- `"gemini-1.5-flash"` - Flash版（高速）
+
+#### 3. 自動承認設定
+
+**設定項目: `cline.autoApprove`**
+
+特定の操作を自動的に承認するかどうかを制御します。
+
+```json
+{
+  "cline.autoApprove": {
+    "readFile": true,
+    "writeFile": false,
+    "executeCommand": false,
+    "searchFiles": true,
+    "listFiles": true,
+    "browserAction": false
+  }
+}
+```
+
+**各項目の説明:**
+- `readFile`: ファイル読み取りを自動承認
+- `writeFile`: ファイル書き込みを自動承認（注意: 危険な可能性）
+- `executeCommand`: コマンド実行を自動承認（注意: 危険な可能性）
+- `searchFiles`: ファイル検索を自動承認
+- `listFiles`: ファイル一覧表示を自動承認
+- `browserAction`: ブラウザ操作を自動承認
+
+**推奨設定:**
+```json
+{
+  "cline.autoApprove": {
+    "readFile": true,
+    "searchFiles": true,
+    "listFiles": true,
+    "writeFile": false,
+    "executeCommand": false,
+    "browserAction": false
+  }
+}
+```
+
+#### 4. コンテキストウィンドウ管理
+
+**設定項目: `cline.maxContextTokens`**
+
+Clineが使用する最大コンテキストトークン数を設定します。
+
+```json
+{
+  "cline.maxContextTokens": 200000
+}
+```
+
+**推奨値:**
+- **Claude 3.5 Sonnet**: 200000（デフォルト）
+- **GPT-4o**: 128000
+- **Gemini 1.5 Pro**: 1000000（可能だが実用的には200000程度）
+
+**メモリ使用量の考慮:**
+```json
+{
+  "cline.maxContextTokens": 100000,  // メモリ節約
+  "cline.alwaysAllowReadOnly": true  // 読み取り専用操作は常に許可
+}
+```
+
+#### 5. カスタムプロンプト設定
+
+**設定項目: `cline.customInstructions`**
+
+すべてのCline会話にグローバルに適用されるカスタム指示を設定します。
+
+```json
+{
+  "cline.customInstructions": "私は日本のPythonプロジェクトで作業しています。すべてのコメントとドキュメントは日本語で書いてください。PEP 8スタイルガイドに厳密に従い、型ヒントを常に使用してください。"
+}
+```
+
+**実用例:**
+```json
+{
+  "cline.customInstructions": "# プロジェクトコンテキスト\n- TypeScriptとReactを使用\n- Material-UIをUIライブラリとして使用\n- すべてのコンポーネントは関数コンポーネントで作成\n- Hooksを積極的に活用\n- テストはJest + React Testing Libraryで実施\n\n# コーディング規約\n- 変数名は camelCase\n- コンポーネント名は PascalCase\n- ファイル名は kebab-case\n- すべての関数にJSDocコメントを付与"
+}
+```
+
+#### 6. ブラウザ自動化設定
+
+**設定項目: `cline.browserSettings`**
+
+Puppeteerブラウザ操作の動作を制御します。
+
+```json
+{
+  "cline.browserSettings": {
+    "headless": false,
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "timeout": 30000,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+  }
+}
+```
+
+**設定項目の説明:**
+- `headless`: ヘッドレスモード（`true`でブラウザウィンドウ非表示）
+- `viewport.width`: ブラウザウィンドウの幅（ピクセル）
+- `viewport.height`: ブラウザウィンドウの高さ（ピクセル）
+- `timeout`: 操作のタイムアウト時間（ミリ秒）
+- `userAgent`: カスタムユーザーエージェント文字列
+
+#### 7. ファイル操作設定
+
+**設定項目: `cline.fileOperations`**
+
+ファイル操作のデフォルト動作を制御します。
+
+```json
+{
+  "cline.fileOperations": {
+    "createBackups": true,
+    "backupDirectory": ".cline-backups",
+    "excludePatterns": [
+      "node_modules/**",
+      "*.log",
+      ".git/**",
+      "dist/**",
+      "build/**"
+    ],
+    "maxFileSize": 1048576
+  }
+}
+```
+
+**設定項目の説明:**
+- `createBackups`: ファイル編集前にバックアップを作成
+- `backupDirectory`: バックアップファイルの保存先
+- `excludePatterns`: 除外するファイル/フォルダパターン
+- `maxFileSize`: 読み取り可能な最大ファイルサイズ（バイト）
+
+#### 8. MCP統合設定
+
+**設定項目: `cline.mcpServers`**
+
+MCPサーバーの設定を定義します。
+
+```json
+{
+  "cline.mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "${env:GITHUB_TOKEN}"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/username/projects"]
+    },
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "env": {
+        "DATABASE_URL": "${env:DATABASE_URL}"
+      }
+    }
+  }
+}
+```
+
+**カスタムMCPサーバーの例:**
+```json
+{
+  "cline.mcpServers": {
+    "custom-api": {
+      "command": "node",
+      "args": ["/path/to/custom-mcp-server.js"],
+      "env": {
+        "API_KEY": "${env:CUSTOM_API_KEY}",
+        "API_ENDPOINT": "https://api.example.com"
+      }
+    }
+  }
+}
+```
+
+#### 9. デバッグとログ設定
+
+**設定項目: `cline.debug`**
+
+デバッグログとトレース情報を制御します。
+
+```json
+{
+  "cline.debug": {
+    "enabled": true,
+    "logLevel": "info",
+    "logToFile": true,
+    "logFilePath": "~/.cline/logs/debug.log",
+    "includeTimestamps": true,
+    "includeAPIRequests": true
+  }
+}
+```
+
+**ログレベル:**
+- `"error"` - エラーのみ
+- `"warn"` - 警告以上
+- `"info"` - 情報以上（推奨）
+- `"debug"` - デバッグ情報を含む
+- `"trace"` - すべての詳細情報
+
+#### 10. UI/UXカスタマイズ
+
+**設定項目: `cline.ui`**
+
+Cline UIの表示設定をカスタマイズします。
+
+```json
+{
+  "cline.ui": {
+    "theme": "dark",
+    "fontSize": 14,
+    "fontFamily": "Monaco, 'Courier New', monospace",
+    "showLineNumbers": true,
+    "wordWrap": true,
+    "compactMode": false,
+    "showTokenCount": true,
+    "animationsEnabled": true
+  }
+}
+```
+
+### 完全な設定例
+
+#### プロフェッショナル開発者向け設定
+
+```json
+{
+  // APIプロバイダー設定
+  "cline.apiProvider": "anthropic",
+  "cline.apiModelId": "claude-3-5-sonnet-20241022",
+  "cline.apiKey": "${env:ANTHROPIC_API_KEY}",
+  "cline.maxTokens": 8096,
+  "cline.temperature": 0.0,
+  
+  // 自動承認設定（安全重視）
+  "cline.autoApprove": {
+    "readFile": true,
+    "writeFile": false,
+    "executeCommand": false,
+    "searchFiles": true,
+    "listFiles": true,
+    "browserAction": false
+  },
+  
+  // カスタム指示
+  "cline.customInstructions": "私はTypeScript/Reactプロジェクトで作業しています。コードは常にTypeScript strict modeに準拠し、すべての関数に適切な型注釈を付けてください。コメントとドキュメントは日本語で記述してください。",
+  
+  // ファイル操作
+  "cline.fileOperations": {
+    "createBackups": true,
+    "backupDirectory": ".cline-backups",
+    "excludePatterns": [
+      "node_modules/**",
+      "*.log",
+      ".git/**",
+      "dist/**",
+      "build/**",
+      "coverage/**"
+    ],
+    "maxFileSize": 2097152
+  },
+  
+  // コンテキスト管理
+  "cline.maxContextTokens": 200000,
+  "cline.alwaysAllowReadOnly": true,
+  
+  // デバッグ
+  "cline.debug": {
+    "enabled": false,
+    "logLevel": "info"
+  }
+}
+```
+
+#### チーム開発向け設定
+
+```json
+{
+  "cline.apiProvider": "anthropic",
+  "cline.apiModelId": "claude-3-5-sonnet-20241022",
+  "cline.apiKey": "${env:ANTHROPIC_API_KEY}",
+  
+  // チーム標準のカスタム指示
+  "cline.customInstructions": "# チーム開発ガイドライン\n\n## コーディング規約\n- ESLintとPrettierの設定に従う\n- コミット前に必ずlintとテストを実行\n- コードレビュー必須\n\n## ドキュメント\n- README.mdを最新に保つ\n- 新機能にはドキュメントを追加\n- APIの変更はCHANGELOG.mdに記録",
+  
+  // 共有MCP設定
+  "cline.mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "${env:GITHUB_TOKEN}"
+      }
+    },
+    "jira": {
+      "command": "node",
+      "args": ["/path/to/team/jira-mcp-server.js"],
+      "env": {
+        "JIRA_API_TOKEN": "${env:JIRA_API_TOKEN}",
+        "JIRA_BASE_URL": "https://yourteam.atlassian.net"
+      }
+    }
+  },
+  
+  // 保守的な自動承認設定
+  "cline.autoApprove": {
+    "readFile": true,
+    "writeFile": false,
+    "executeCommand": false,
+    "searchFiles": true,
+    "listFiles": true,
+    "browserAction": false
+  }
+}
+```
+
+#### ローカル開発・実験用設定
+
+```json
+{
+  "cline.apiProvider": "ollama",
+  "cline.apiModelId": "codellama:13b",
+  "cline.baseUrl": "http://localhost:11434",
+  
+  // より積極的な自動承認（ローカル環境のため）
+  "cline.autoApprove": {
+    "readFile": true,
+    "writeFile": true,
+    "executeCommand": true,
+    "searchFiles": true,
+    "listFiles": true,
+    "browserAction": true
+  },
+  
+  // デバッグ有効
+  "cline.debug": {
+    "enabled": true,
+    "logLevel": "debug",
+    "logToFile": true
+  },
+  
+  "cline.maxContextTokens": 50000  // ローカルモデルのため制限
+}
+```
+
+#### エンタープライズ環境向け設定
+
+```json
+{
+  "cline.apiProvider": "bedrock",
+  "cline.apiModelId": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+  "cline.awsRegion": "us-east-1",
+  
+  // AWS認証情報は環境変数またはAWS CLIから取得
+  "cline.awsProfile": "cline-production",
+  
+  // セキュリティ重視の設定
+  "cline.autoApprove": {
+    "readFile": true,
+    "writeFile": false,
+    "executeCommand": false,
+    "searchFiles": true,
+    "listFiles": true,
+    "browserAction": false
+  },
+  
+  // ファイル操作制限
+  "cline.fileOperations": {
+    "createBackups": true,
+    "backupDirectory": ".cline-backups",
+    "excludePatterns": [
+      "node_modules/**",
+      "*.log",
+      ".git/**",
+      "dist/**",
+      "build/**",
+      "coverage/**",
+      ".env*",
+      "secrets/**",
+      "credentials/**"
+    ],
+    "maxFileSize": 1048576
+  },
+  
+  // 監査ログ有効化
+  "cline.debug": {
+    "enabled": true,
+    "logLevel": "info",
+    "logToFile": true,
+    "logFilePath": "/var/log/cline/audit.log",
+    "includeTimestamps": true,
+    "includeAPIRequests": true
+  }
+}
+```
+
+### 環境変数の設定方法
+
+#### macOS/Linux
+
+**~/.bashrc または ~/.zshrc に追加:**
+```bash
+# Cline API Keys
+export ANTHROPIC_API_KEY="sk-ant-xxxxxxxxxxxxx"
+export OPENAI_API_KEY="sk-xxxxxxxxxxxxx"
+export GOOGLE_API_KEY="xxxxxxxxxxxxx"
+
+# MCP Server用の環境変数
+export GITHUB_TOKEN="ghp_xxxxxxxxxxxxx"
+export JIRA_API_TOKEN="xxxxxxxxxxxxx"
+export DATABASE_URL="postgresql://user:pass@localhost:5432/db"
+```
+
+**または、専用の設定ファイルを作成:**
+```bash
+# ~/.cline/config
+export ANTHROPIC_API_KEY="sk-ant-xxxxxxxxxxxxx"
+export OPENAI_API_KEY="sk-xxxxxxxxxxxxx"
+
+# .bashrc/.zshrcから読み込み
+source ~/.cline/config
+```
+
+#### Windows
+
+**環境変数の設定（コマンドプロンプト）:**
+```cmd
+setx ANTHROPIC_API_KEY "sk-ant-xxxxxxxxxxxxx"
+setx OPENAI_API_KEY "sk-xxxxxxxxxxxxx"
+setx GOOGLE_API_KEY "xxxxxxxxxxxxx"
+```
+
+**PowerShellの場合:**
+```powershell
+[Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", "sk-ant-xxxxxxxxxxxxx", "User")
+[Environment]::SetEnvironmentVariable("OPENAI_API_KEY", "sk-xxxxxxxxxxxxx", "User")
+```
+
+### 設定の管理とベストプラクティス
+
+#### 1. プロジェクト固有の設定
+
+プロジェクトルートに `.vscode/settings.json` を作成:
+```json
+{
+  "cline.customInstructions": "このプロジェクト固有の指示",
+  "cline.mcpServers": {
+    "project-specific": {
+      "command": "node",
+      "args": ["./scripts/mcp-server.js"]
+    }
+  }
+}
+```
+
+#### 2. 機密情報の管理
+
+**絶対にやってはいけないこと:**
+- APIキーを直接settings.jsonに記載
+- 設定ファイルをGitにコミット
+- 機密情報を共有設定に含める
+
+**推奨される方法:**
+- 環境変数を使用: `${env:API_KEY}`
+- `.env` ファイル（.gitignoreに追加）
+- キーチェーン/認証情報マネージャー
+- チーム用の安全な認証情報管理システム
+
+#### 3. バージョン管理
+
+**チーム共有設定:**
+```json
+// .vscode/settings.json (リポジトリに含める)
+{
+  "cline.customInstructions": "${file:docs/cline-guidelines.md}",
+  "cline.fileOperations": {
+    "excludePatterns": [
+      "node_modules/**",
+      "dist/**"
+    ]
+  }
+}
+```
+
+**個人設定:**
+```json
+// ユーザー設定（個人のVS Code設定）
+{
+  "cline.apiKey": "${env:ANTHROPIC_API_KEY}",
+  "cline.autoApprove": {
+    "readFile": true
+  }
+}
+```
+
+#### 4. 設定の優先順位
+
+Clineは以下の順序で設定を読み込みます（後のものが優先）:
+1. デフォルト設定
+2. グローバルユーザー設定
+3. ワークスペース設定
+4. プロジェクト固有の設定
+
+---
+
+## 便利な機能とTips
 繰り返しの承認を減らし、開発を高速化（設定で有効化可能）
 
 ### 2. チェックポイント
