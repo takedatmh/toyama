@@ -1,0 +1,6 @@
+langgraph
+langchain
+langchain-anthropic
+langchain-mcp-adapters
+mcp[cli]<2
+claude-agent-sdk
